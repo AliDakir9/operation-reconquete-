@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opération Reconquête — Disway</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
+:root{
+  --blue:#005BBB;--blue-mid:#1a6fd4;--blue-light:#e8f0fb;--blue-pale:#f0f5ff;
+  --red:#E8334A;--red-light:#fdeef0;
+  --green:#059669;--green-light:#ecfdf5;--green-mid:#10b981;
+  --yellow:#d97706;--yellow-light:#fffbeb;--orange:#ea580c;
+  --bg:#f4f6fb;--surface:#fff;--surface2:#f8faff;
+  --border:#e2e8f0;--border-blue:#bfcfe8;
+  --text:#0f172a;--text-mid:#334155;--text-muted:#64748b;--text-dim:#94a3b8;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);--shadow-lg:0 12px 40px rgba(0,0,0,.12);
+  --r8:8px;--r14:14px;--r20:20px;--r28:28px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+/* LOADING */
+#loading-overlay{position:fixed;inset:0;z-index:700;background:rgba(244,246,251,.92);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;backdrop-filter:blur(4px);}
+.spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-txt{font-size:13px;color:var(--text-muted);font-weight:500;}
+/* CONFIRM */
+#confirm-modal{position:fixed;inset:0;z-index:600;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+#confirm-modal.show{display:flex;}
+.confirm-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r28);padding:40px;max-width:420px;width:90%;text-align:center;box-shadow:var(--shadow-lg);animation:pop .2s ease;}
+@keyframes pop{from{transform:scale(.93);opacity:0;}to{transform:scale(1);opacity:1;}}
+.confirm-icon{font-size:44px;margin-bottom:14px;}
+.confirm-title{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px;}
+.confirm-msg{font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:26px;}
+.confirm-msg strong{color:var(--red);}
+.confirm-actions{display:flex;gap:10px;justify-content:center;}
+/* TOAST */
+.toast-zone{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--surface);border:1px solid var(--green);border-radius:var(--r14);padding:13px 18px;font-size:13px;box-shadow:var(--shadow-md);display:flex;align-items:center;gap:10px;animation:toast-in .3s ease;max-width:300px;color:var(--text-mid);}
+.toast.err{border-color:var(--red);}
+@keyframes toast-in{from{transform:translateY(14px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+/* ===== LOGIN ===== */
+#login-screen{position:fixed;inset:0;z-index:900;background:linear-gradient(150deg,#f0f5ff 0%,#e8eef8 60%,#edf2ff 100%);display:flex;align-items:center;justify-content:center;}
+.orbit-deco{position:absolute;border-radius:50%;border:1px dashed rgba(0,91,187,.12);pointer-events:none;}
+.lcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r28);width:460px;box-shadow:var(--shadow-lg),0 0 0 1px rgba(0,91,187,.04);position:relative;z-index:2;overflow:hidden;}
+.lcard-top{background:linear-gradient(135deg,var(--blue) 0%,var(--blue-mid) 100%);padding:40px 44px 36px;text-align:center;position:relative;overflow:hidden;}
+.lcard-top::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);}
+.login-rocket{font-size:52px;display:block;margin-bottom:16px;animation:float 3s ease-in-out infinite;position:relative;z-index:1;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.login-brand{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:2.5px;margin-bottom:7px;position:relative;z-index:1;}
+.login-title{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:800;color:white;letter-spacing:-.5px;line-height:1.2;position:relative;z-index:1;}
+.lcard-body{padding:30px 44px 38px;}
+.concept-box{background:var(--blue-pale);border-left:3px solid var(--blue);border-radius:0 var(--r8) var(--r8) 0;padding:14px 16px;margin-bottom:22px;font-size:12.5px;color:var(--text-mid);line-height:1.65;}
+.concept-box strong{color:var(--blue);}
+.lpills{display:flex;gap:8px;margin-bottom:22px;}
+.lpill{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r8);padding:10px 8px;text-align:center;}
+.lpill-val{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--blue);}
+.lpill-lbl{font-size:10px;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
+.form-label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:8px;font-weight:500;}
+.form-input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r8);padding:12px 15px;font-size:14px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;margin-bottom:13px;}
+.form-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,91,187,.1);}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--blue) 0%,var(--blue-mid) 100%);color:white;border:none;border-radius:var(--r8);padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .2s;box-shadow:0 4px 12px rgba(0,91,187,.28);letter-spacing:.3px;}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,91,187,.36);}
+.login-error{color:var(--red);font-size:12px;margin-top:10px;display:none;background:var(--red-light);border-radius:6px;padding:8px 12px;text-align:center;}
+/* ===== BRIEFING ===== */
+#briefing-screen{position:fixed;inset:0;z-index:800;background:linear-gradient(150deg,#f0f5ff 0%,#e8eef8 100%);display:none;align-items:center;justify-content:center;}
+.bcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r28);padding:50px 46px;max-width:540px;width:90%;box-shadow:var(--shadow-lg);text-align:center;}
+.btransmit{display:inline-flex;align-items:center;gap:6px;background:var(--blue-light);color:var(--blue);border:1px solid var(--border-blue);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:22px;}
+.brole-icon{font-size:66px;display:block;margin-bottom:16px;animation:float 3s ease-in-out infinite;}
+.brole-title{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:800;color:var(--blue);letter-spacing:-.5px;margin-bottom:5px;}
+.brole-sub{font-size:13px;color:var(--text-muted);margin-bottom:22px;}
+.brole-desc{font-size:13.5px;color:var(--text-mid);line-height:1.7;margin-bottom:26px;padding:17px;background:var(--blue-pale);border-radius:var(--r14);text-align:left;}
+.brole-desc strong{color:var(--blue);}
+.bstats{display:flex;gap:10px;margin-bottom:26px;}
+.bstat{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r14);padding:13px 10px;text-align:center;}
+.bstat-val{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--blue);}
+.bstat-lbl{font-size:10px;color:var(--text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:.5px;}
+.bcta{width:100%;background:linear-gradient(135deg,var(--blue) 0%,var(--blue-mid) 100%);color:white;border:none;border-radius:var(--r8);padding:15px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .2s;box-shadow:0 4px 14px rgba(0,91,187,.28);letter-spacing:.3px;}
+.bcta:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,91,187,.36);}
+/* ===== APP ===== */
+#app{display:none;}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm);}
+.h-left{display:flex;align-items:center;gap:14px;}
+.logo{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.5px;display:flex;align-items:center;gap:2px;}
+.logo .lt{color:var(--text);}
+.logo .d1{color:var(--blue);font-size:23px;line-height:1;}
+.logo .d2{color:var(--red);font-size:17px;line-height:1;}
+.hmission{background:var(--blue-light);border:1px solid var(--border-blue);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:1px;}
+.h-right{display:flex;align-items:center;gap:10px;}
+.upill{display:flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 13px;font-size:12px;font-weight:500;color:var(--text-mid);}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pglow 2s infinite;}
+@keyframes pglow{0%,100%{box-shadow:0 0 0 0 rgba(5,150,105,.4);}50%{box-shadow:0 0 0 4px rgba(5,150,105,0);}}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:var(--r8);padding:6px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;}
+.logout-btn:hover{border-color:var(--red);color:var(--red);}
+.main{padding:26px 32px;max-width:1400px;margin:0 auto;}
+/* LAUNCH SIGNAL */
+.launch-signal{border-radius:var(--r14);padding:15px 22px;margin-bottom:18px;display:flex;align-items:center;gap:14px;}
+.launch-signal.pending{background:linear-gradient(135deg,#1e3a5f 0%,var(--blue) 100%);box-shadow:0 4px 16px rgba(0,91,187,.2);}
+.launch-signal.ready{background:linear-gradient(135deg,#065f46 0%,#047857 100%);box-shadow:0 4px 16px rgba(5,150,105,.2);}
+.ls-icon{font-size:26px;flex-shrink:0;}
+.ls-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:white;margin-bottom:2px;}
+.ls-sub{font-size:11.5px;color:rgba(255,255,255,.7);}
+.ls-badge{margin-left:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:white;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
+/* WEEK BANNER */
+.week-banner{background:linear-gradient(135deg,var(--blue) 0%,var(--blue-mid) 100%);border-radius:var(--r20);padding:22px 30px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 28px rgba(0,91,187,.2);position:relative;overflow:hidden;}
+.week-banner::before{content:'🚀';position:absolute;right:115px;top:50%;transform:translateY(-50%);font-size:66px;opacity:.07;}
+.wb-eyebrow{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;}
+.wb-week{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:800;color:white;letter-spacing:-1px;line-height:1;}
+.wb-dates{font-size:12px;color:rgba(255,255,255,.5);margin-top:3px;}
+.wb-right{text-align:right;}
+.wb-score-lbl{font-size:11px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.wb-score{font-family:'Space Grotesk',sans-serif;font-size:38px;font-weight:800;color:white;line-height:1;}
+.wb-score .slash{color:rgba(255,255,255,.35);font-size:24px;margin:0 3px;}
+.wb-score .tgt{color:rgba(255,255,255,.5);font-size:24px;}
+.wb-status{font-size:11.5px;color:rgba(255,255,255,.65);margin-top:4px;}
+.wb-bar-wrap{position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(255,255,255,.1);}
+.wb-bar-fill{height:100%;background:rgba(255,255,255,.45);transition:width .8s ease;border-radius:0 2px 2px 0;}
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r14);padding:19px 17px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s;}
+.kpi:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.kpi-accent{position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0;}
+.kpi-accent.blue{background:var(--blue);}
+.kpi-accent.green{background:var(--green);}
+.kpi-accent.yellow{background:var(--yellow);}
+.kpi-accent.red{background:var(--red);}
+.kpi-icon{font-size:19px;margin-bottom:9px;display:block;}
+.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:5px;font-weight:600;}
+.kpi-val{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;color:var(--text);line-height:1;margin-bottom:4px;}
+.kpi-val .unit{font-size:12px;font-weight:400;color:var(--text-muted);}
+.kpi-sub{font-size:11px;color:var(--text-muted);}
+.kpi-sub .hl{font-weight:600;color:var(--green);}
+/* GLOBAL BAR */
+.global-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r14);padding:20px 26px;margin-bottom:18px;box-shadow:var(--shadow-sm);}
+.gsec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.gsec-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.gicon{width:26px;height:26px;background:var(--blue-light);border:1px solid var(--border-blue);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.gbar{height:18px;background:var(--bg);border-radius:9px;border:1px solid var(--border);overflow:hidden;position:relative;margin-bottom:9px;}
+.gbar-fill{height:100%;background:linear-gradient(90deg,var(--blue) 0%,var(--blue-mid) 60%,#4dabff 100%);border-radius:9px;transition:width 1.2s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;padding-left:9px;position:relative;overflow:hidden;}
+.gbar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);animation:scan 2.5s linear infinite;}
+@keyframes scan{from{transform:translateX(-100%);}to{transform:translateX(200%);}}
+.gbar-pct{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;color:white;position:relative;z-index:1;white-space:nowrap;}
+.gbar-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);}
+.gbar-labels .gl{color:var(--blue);font-weight:600;}
+/* GALAXY */
+.galaxy-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r20);padding:22px 26px;margin-bottom:18px;box-shadow:var(--shadow-sm);}
+.galaxy-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.sec-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.galaxy-legend{display:flex;gap:13px;font-size:11px;color:var(--text-muted);}
+.gl-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
+/* PRE-MISSION */
+.premission{background:linear-gradient(135deg,var(--green-light) 0%,#f0fdf4 100%);border:1px solid rgba(5,150,105,.2);border-radius:var(--r14);padding:16px 22px;margin-bottom:18px;display:flex;align-items:center;gap:14px;}
+.pm-icon{font-size:30px;flex-shrink:0;}
+.pm-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--green);margin-bottom:2px;}
+.pm-sub{font-size:12px;color:var(--text-muted);}
+.pm-badge{margin-left:auto;background:var(--green);color:white;border-radius:20px;padding:5px 13px;font-size:11px;font-weight:700;white-space:nowrap;}
+/* PLANETS */
+.planets-section{margin-bottom:18px;}
+.planets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:13px;}
+.pcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r20);overflow:hidden;box-shadow:var(--shadow-sm);transition:all .25s;position:relative;}
+.pcard:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.pcard.liberated{border-color:rgba(5,150,105,.3);box-shadow:0 0 0 1px rgba(5,150,105,.12),var(--shadow-sm);}
+.pcard.active-planet{border-color:rgba(0,91,187,.3);box-shadow:0 0 0 1px rgba(0,91,187,.12),var(--shadow-sm);}
+.pcard.launch-planet{border-color:rgba(16,185,129,.45);border-width:2px;}
+.planet-launch-tag{position:absolute;top:11px;right:11px;background:var(--green);color:white;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-radius:4px;padding:3px 7px;}
+.pcard-head{padding:17px 19px 13px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.porb{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;transition:all .3s;}
+.porb.locked{background:#f1f5f9;border:1px solid var(--border);}
+.porb.active{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;animation:porb-pulse 2.5s ease-in-out infinite;}
+@keyframes porb-pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,91,187,.2);}50%{box-shadow:0 0 0 8px rgba(0,91,187,0);}}
+.porb.done{background:linear-gradient(135deg,var(--green-light),#a7f3d0);border:1px solid #6ee7b7;}
+.pinfo{flex:1;}
+.pname{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.psub{font-size:11px;color:var(--text-muted);}
+.pestim{font-size:11px;color:var(--text-muted);margin-top:3px;}
+.pestim strong{color:var(--blue);}
+.pstatus-badge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;flex-shrink:0;}
+.badge-locked{background:#f1f5f9;color:var(--text-dim);border:1px solid var(--border);}
+.badge-active{background:#eff6ff;color:var(--blue);border:1px solid #bfdbfe;}
+.badge-done{background:var(--green-light);color:var(--green);border:1px solid #a7f3d0;}
+.pprog{padding:13px 19px 0;}
+.pbar-wrap{height:5px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:6px;}
+.pbar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-mid));border-radius:3px;transition:width .8s ease;}
+.pbar-fill.done{background:linear-gradient(90deg,var(--green),var(--green-mid));}
+.pbar-lbls{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:11px;}
+.pbar-pct{font-weight:700;color:var(--blue);}
+.pbar-pct.done{color:var(--green);}
+.zones-list{padding:0 19px 14px;}
+.zone-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bg);}
+.zone-row:last-child{border-bottom:none;}
+.zind{width:17px;height:17px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;transition:all .3s;}
+.zind.done{background:var(--green);border-color:var(--green);color:white;box-shadow:0 0 5px rgba(5,150,105,.35);}
+.zind.partial{background:var(--yellow-light);border-color:var(--yellow);color:var(--yellow);}
+.zname{flex:1;font-size:12px;color:var(--text-mid);font-weight:500;}
+.zname.done{color:var(--text-dim);text-decoration:line-through;}
+.zmbar{width:50px;height:3px;background:var(--bg);border-radius:2px;overflow:hidden;}
+.zmfill{height:100%;background:var(--blue);border-radius:2px;transition:width .4s;}
+.zmfill.done{background:var(--green);}
+.zcnt{font-size:11px;font-weight:600;color:var(--text-muted);min-width:42px;text-align:right;}
+.zcnt .zd{color:var(--green);}
+/* EDITOR */
+#editor-panel{background:var(--surface);border:1px solid var(--border-blue);border-radius:var(--r20);padding:22px 26px;margin-bottom:18px;display:none;box-shadow:var(--shadow-sm);}
+.editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.eblock{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r14);overflow:hidden;}
+.ehead{padding:11px 14px;background:var(--blue-pale);border-bottom:1px solid var(--border-blue);display:flex;align-items:center;gap:7px;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;color:var(--blue);}
+.erow{display:flex;align-items:center;gap:8px;padding:8px 13px;border-bottom:1px solid var(--border);}
+.erow:last-child{border-bottom:none;}
+.ename{flex:1;font-size:12px;color:var(--text-mid);font-weight:500;}
+.emeta{font-size:10px;color:var(--text-dim);}
+.einput{width:66px;background:white;border:1.5px solid var(--border);border-radius:7px;padding:6px 9px;color:var(--text);font-size:13px;font-weight:600;text-align:center;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;}
+.einput:focus{border-color:var(--blue);}
+.etoggle{width:27px;height:27px;border-radius:7px;border:1.5px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s;color:var(--text-muted);}
+.etoggle:hover{border-color:var(--green);color:var(--green);}
+.etoggle.active{background:var(--green);border-color:var(--green);color:white;box-shadow:0 2px 7px rgba(5,150,105,.3);}
+/* ADMIN */
+#admin-panel{background:var(--surface);border:1px solid var(--border-blue);border-radius:var(--r20);padding:22px 26px;margin-bottom:18px;display:none;box-shadow:var(--shadow-sm);}
+.atabs{display:flex;gap:6px;border-bottom:1px solid var(--border);padding-bottom:11px;margin-bottom:16px;}
+.atab{padding:6px 14px;border-radius:var(--r8);font-size:12px;font-weight:500;cursor:pointer;border:1px solid transparent;color:var(--text-muted);background:transparent;font-family:'Inter',sans-serif;transition:all .2s;}
+.atab.active{background:var(--blue);color:white;border-color:var(--blue);}
+.atab:hover:not(.active){border-color:var(--border-blue);color:var(--text);}
+.atab-content{display:none;}
+.atab-content.active{display:block;}
+.aform-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px;}
+.acat-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r14);margin-bottom:8px;overflow:hidden;}
+.acat-head{padding:11px 15px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:background .2s;}
+.acat-head:hover{background:var(--blue-pale);}
+.acat-name{flex:1;font-size:13px;font-weight:600;}
+.acat-stats{font-size:11px;color:var(--text-muted);margin-right:7px;}
+.acat-body{display:none;padding:0 15px 11px;border-top:1px solid var(--border);}
+.acat-body.open{display:block;}
+.asub-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);}
+.asub-row:last-child{border-bottom:none;}
+.asub-name{flex:1;font-size:12px;}
+.asub-cnt{font-size:12px;font-weight:600;color:var(--blue);}
+.add-sub-row{display:flex;gap:7px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+.add-sub-row .form-input{padding:7px 10px;font-size:12px;}
+/* HISTORY */
+.history-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r14);padding:19px 22px;margin-bottom:18px;display:none;box-shadow:var(--shadow-sm);}
+.htable{width:100%;border-collapse:collapse;margin-top:13px;}
+.htable th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;}
+.htable td{padding:8px 10px;font-size:12px;color:var(--text-mid);border-bottom:1px solid var(--bg);}
+.htable tr:last-child td{border-bottom:none;}
+.htable .td-b{color:var(--blue);font-weight:700;}
+.htable .td-g{color:var(--green);font-weight:600;}
+.htable .td-r{color:var(--red);font-size:11px;}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:var(--r8);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:none;transition:all .2s;}
+.btn-p{background:var(--blue);color:white;box-shadow:0 2px 7px rgba(0,91,187,.2);}
+.btn-p:hover{background:var(--blue-mid);transform:translateY(-1px);}
+.btn-g{background:var(--green);color:white;box-shadow:0 2px 7px rgba(5,150,105,.2);}
+.btn-g:hover{background:#047857;transform:translateY(-1px);}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text-muted);}
+.btn-ghost:hover{border-color:var(--red);color:var(--red);}
+.btn-danger{background:var(--red);color:white;}
+.btn-sm{padding:5px 10px;font-size:11px;}
+@media(max-width:900px){
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .editor-grid{grid-template-columns:1fr;}
+  .main{padding:14px;}
+  .week-banner{flex-direction:column;gap:12px;text-align:center;}
+}
+</style>
+</head>
+<body>
+<div id="loading-overlay"><div class="spinner"></div><div class="loading-txt">Connexion au QG de mission...</div></div>
+<div id="confirm-modal"><div class="confirm-card"><div class="confirm-icon">&#9888;&#65039;</div><div class="confirm-title" id="ct">Confirmation</div><div class="confirm-msg" id="cm"></div><div class="confirm-actions"><button class="btn btn-ghost" onclick="closeConfirm()">Annuler</button><button class="btn btn-danger" onclick="confirmAction()">Confirmer</button></div></div></div>
+<div class="toast-zone" id="tz"></div>
+<!-- LOGIN -->
+<div id="login-screen">
+  <div style="position:absolute;inset:0;pointer-events:none;">
+    <div class="orbit-deco" style="width:520px;height:520px;top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+    <div class="orbit-deco" style="width:320px;height:320px;top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+    <div class="orbit-deco" style="width:160px;height:160px;top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+  </div>
+  <div class="lcard">
+    <div class="lcard-top">
+      <span class="login-rocket">&#128640;</span>
+      <div class="login-brand">Disway &mdash; Nouveau Site</div>
+      <div class="login-title">Op&eacute;ration Reconqu&ecirc;te</div>
+    </div>
+    <div class="lcard-body">
+      <div class="concept-box">
+        <strong>La situation :</strong> disway.com passe au nouveau template. <strong>2663 pages produits</strong> sont &agrave; reconqu&eacute;rir, r&eacute;parties sur 5 plan&egrave;tes. Chaque semaine, l&#39;&eacute;quipe avance zone par zone. Ce dashboard suit la progression en temps r&eacute;el &mdash; et d&eacute;clenche le signal de lancement d&egrave;s que les deux premi&egrave;res plan&egrave;tes sont lib&eacute;r&eacute;es.
+      </div>
+      <div class="lpills">
+        <div class="lpill"><div class="lpill-val">2663</div><div class="lpill-lbl">Pages</div></div>
+        <div class="lpill"><div class="lpill-val">5</div><div class="lpill-lbl">Plan&egrave;tes</div></div>
+        <div class="lpill"><div class="lpill-val">80</div><div class="lpill-lbl">Pages/sem.</div></div>
+        <div class="lpill"><div class="lpill-val">~34</div><div class="lpill-lbl">Semaines</div></div>
+      </div>
+      <label class="form-label">Code d&#39;acc&egrave;s</label>
+      <input type="password" id="pw-input" class="form-input" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="login-btn" onclick="doLogin()">&#128272; Acc&eacute;der au QG de mission</button>
+      <div class="login-error" id="login-error">Code invalide. Contacte le Commandant.</div>
+    </div>
+  </div>
+</div>
+<!-- BRIEFING -->
+<div id="briefing-screen">
+  <div class="bcard">
+    <div class="btransmit">&#128225; Transmission s&eacute;curis&eacute;e re&ccedil;ue</div>
+    <span class="brole-icon" id="b-icon">&#128640;</span>
+    <div class="brole-title" id="b-title">R&ocirc;le</div>
+    <div class="brole-sub" id="b-sub">Identification confirm&eacute;e</div>
+    <div class="brole-desc" id="b-desc"></div>
+    <div class="bstats">
+      <div class="bstat"><div class="bstat-val">2663</div><div class="bstat-lbl">Pages totales</div></div>
+      <div class="bstat"><div class="bstat-val">5</div><div class="bstat-lbl">Plan&egrave;tes</div></div>
+      <div class="bstat"><div class="bstat-val">80</div><div class="bstat-lbl">Pages/semaine</div></div>
+      <div class="bstat"><div class="bstat-val">~34</div><div class="bstat-lbl">Semaines est.</div></div>
+    </div>
+    <button class="bcta" onclick="dismissBriefing()">&#129359; Mission comprise &mdash; Allons-y !</button>
+  </div>
+</div>
+<!-- APP -->
+<div id="app">
+  <header class="header">
+    <div class="h-left">
+      <div class="logo"><span class="lt">dis</span><span class="d1">&#183;</span><span class="lt">way</span><span class="d2">&#183;</span></div>
+      <div class="hmission">&#128640; Op&eacute;ration Reconqu&ecirc;te</div>
+    </div>
+    <div class="h-right">
+      <div class="upill"><div class="sdot"></div><span id="user-label">Connect&eacute;</span></div>
+      <button class="logout-btn" onclick="doLogout()">D&eacute;connexion</button>
+    </div>
+  </header>
+  <div class="main">
+    <div class="launch-signal pending" id="launch-signal">
+      <div class="ls-icon">&#128752;&#65039;</div>
+      <div>
+        <div class="ls-title" id="ls-title">Signal de lancement en attente</div>
+        <div class="ls-sub" id="ls-sub">Le site peut &ecirc;tre d&eacute;ploy&eacute; d&egrave;s que Ordinateur + Impression sont &agrave; 100%</div>
+      </div>
+      <div class="ls-badge" id="ls-badge">En pr&eacute;paration</div>
+    </div>
+    <div class="week-banner">
+      <div>
+        <div class="wb-eyebrow">Mission en cours</div>
+        <div class="wb-week" id="wb-week">Semaine 1</div>
+        <div class="wb-dates" id="wb-dates">22 juin &mdash; 27 juin 2026</div>
+      </div>
+      <div class="wb-right">
+        <div class="wb-score-lbl">Pages restaur&eacute;es cette semaine</div>
+        <div class="wb-score"><span id="wb-done">0</span><span class="slash">/</span><span class="tgt" id="wb-target">80</span></div>
+        <div class="wb-status" id="wb-status">En attente de la premi&egrave;re saisie</div>
+      </div>
+      <div class="wb-bar-wrap"><div class="wb-bar-fill" id="wb-bar" style="width:0%"></div></div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-accent blue"></div><span class="kpi-icon">&#127756;</span><div class="kpi-label">Total pages</div><div class="kpi-val" id="kpi-total">0 <span class="unit">pages</span></div><div class="kpi-sub">Objectif global mission</div></div>
+      <div class="kpi"><div class="kpi-accent green"></div><span class="kpi-icon">&#9989;</span><div class="kpi-label">Pages restaur&eacute;es</div><div class="kpi-val" id="kpi-done">0 <span class="unit">pages</span></div><div class="kpi-sub"><span class="hl" id="kpi-pct">0%</span> de la galaxie reconquise</div></div>
+      <div class="kpi"><div class="kpi-accent yellow"></div><span class="kpi-icon">&#9201;</span><div class="kpi-label">Semaines restantes</div><div class="kpi-val" id="kpi-weeks">- <span class="unit">sem.</span></div><div class="kpi-sub">Au rythme de <span id="kpi-rhythm">80</span> pages/sem.</div></div>
+      <div class="kpi"><div class="kpi-accent red"></div><span class="kpi-icon">&#128997;</span><div class="kpi-label">Pages restantes</div><div class="kpi-val" id="kpi-rem">0 <span class="unit">pages</span></div><div class="kpi-sub">Avant reconqu&ecirc;te totale</div></div>
+    </div>
+    <div class="global-section">
+      <div class="gsec-head">
+        <div class="gsec-title"><div class="gicon">&#128225;</div>Signal de reconqu&ecirc;te globale</div>
+        <span style="font-size:11px;color:var(--text-muted);" id="g-pct-txt">0% restaur&eacute;</span>
+      </div>
+      <div class="gbar"><div class="gbar-fill" id="gbar" style="width:0%"><span class="gbar-pct" id="gbar-lbl"></span></div></div>
+      <div class="gbar-labels"><span>D&eacute;part &mdash; 22 juin 2026</span><span class="gl" id="g-done-lbl">0 pages restaur&eacute;es</span><span>Cible &mdash; 2663 pages</span></div>
+    </div>
+    <div class="galaxy-section">
+      <div class="galaxy-head">
+        <div class="sec-title"><div class="gicon">&#127756;</div>Carte galactique</div>
+        <div class="galaxy-legend">
+          <span><span class="gl-dot" style="background:var(--text-dim)"></span>Corrompue</span>
+          <span><span class="gl-dot" style="background:var(--blue)"></span>En cours</span>
+          <span><span class="gl-dot" style="background:var(--green)"></span>Lib&eacute;r&eacute;e</span>
+          <span><span class="gl-dot" style="background:rgba(16,185,129,.5)"></span>Signal lancement</span>
+        </div>
+      </div>
+      <canvas id="galaxy-canvas" style="width:100%;height:200px;display:block;"></canvas>
+    </div>
+    <div class="premission">
+      <div class="pm-icon">&#9989;</div>
+      <div>
+        <div class="pm-title">Pr&eacute;-mission accomplie</div>
+        <div class="pm-sub">Pages contenu (hors produits) r&eacute;alis&eacute;es par Abdelali avant le lancement de l&#39;Op&eacute;ration Reconqu&ecirc;te : homepage, pages solutions, &agrave; propos, structure blog.</div>
+      </div>
+      <div class="pm-badge">Pages contenu &#10003;</div>
+    </div>
+    <div id="editor-panel">
+      <div class="sec-title" style="margin-bottom:6px;"><div class="gicon">&#9999;&#65039;</div>Rapport de mission &mdash; Abdelali</div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Indique les pages restaur&eacute;es par zone cette semaine. Coche &#10003; pour marquer une zone enti&egrave;rement lib&eacute;r&eacute;e.</p>
+      <div class="editor-grid" id="editor-content"></div>
+      <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
+        <button class="btn btn-g" onclick="saveEditorData()">&#128190; Enregistrer mon rapport</button>
+        <span style="font-size:11px;color:var(--text-muted);">Synchronis&eacute; avec le QG en temps r&eacute;el.</span>
+      </div>
+    </div>
+    <div id="admin-panel">
+      <div class="sec-title" style="margin-bottom:16px;"><div class="gicon">&#9881;&#65039;</div>QG Admin &mdash; Commandant Ryad</div>
+      <div class="atabs">
+        <button class="atab active" onclick="switchTab(event,'tab-struct')">&#127760; Structure des plan&egrave;tes</button>
+        <button class="atab" onclick="switchTab(event,'tab-settings')">&#9881;&#65039; Param&egrave;tres</button>
+      </div>
+      <div class="atab-content active" id="tab-struct">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <p style="font-size:12px;color:var(--text-muted);">Pour Accessoire : ajoute les chiffres directement dans Google Sheets, onglet <strong>categories</strong>, colonne <strong>total</strong>, ligne SUB correspondante.</p>
+          <button class="btn btn-p" onclick="showAddCat()">+ Nouvelle plan&egrave;te</button>
+        </div>
+        <div id="add-cat-form" style="display:none;background:var(--blue-pale);border:1px solid var(--border-blue);border-radius:var(--r14);padding:17px;margin-bottom:12px;">
+          <div class="aform-row">
+            <div><label class="form-label">Nom</label><input type="text" class="form-input" id="nc-name" placeholder="ex: Ordinateur"></div>
+            <div><label class="form-label">Emoji</label><input type="text" class="form-input" id="nc-icon" placeholder="&#128187;" maxlength="4"></div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-g btn-sm" onclick="addCat()">&#10003; Ajouter</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('add-cat-form').style.display='none'">Annuler</button>
+          </div>
+        </div>
+        <div id="admin-cat-list"></div>
+      </div>
+      <div class="atab-content" id="tab-settings">
+        <div style="max-width:320px;">
+          <div style="margin-bottom:11px;"><label class="form-label">Pages cibles par semaine</label><input type="number" class="form-input" id="target-input" value="80" min="1"></div>
+          <button class="btn btn-p" onclick="saveTarget()">Sauvegarder</button>
+        </div>
+      </div>
+    </div>
+    <div class="planets-section">
+      <div class="sec-title" style="margin-bottom:13px;"><div class="gicon">&#127760;</div>Plan&egrave;tes &mdash; D&eacute;tail par cat&eacute;gorie</div>
+      <div class="planets-grid" id="planets-grid"></div>
+    </div>
+    <div class="history-section" id="history-section">
+      <div class="sec-title"><div class="gicon">&#128202;</div>Journal de mission</div>
+      <table class="htable"><thead><tr><th>Semaine</th><th>Dates</th><th>Pages restaur&eacute;es</th><th>Objectif</th><th>Statut</th><th>Total cumul&eacute;</th></tr></thead><tbody id="history-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycby10Di5DkHoNQ1-MLkMHdEk3Srn4oTIv8D-fPd0fsWU0tNfao0zu0LpK83PZyBl9CeZ/exec';
+const PASSWORDS={admin:'disway2026',editor:'abdelali2026',viewer:'mehdi2026'};
+const START_DATE=new Date('2026-06-22');
+const BKEY='disway_briefed_v3';
+const LAUNCH_TRIGGER=['Ordinateur','Impression'];
+let role=null;
+let state={categories:[],weeklyTarget:80,weekHistory:[]};
+let pendingConfirm=null;
+let shipAngle=0;
+
+function defaultCategories(){
+  return[
+    {id:'cat_ord',name:'Ordinateur',icon:'\u{1F4BB}',subcats:[
+      {id:'sub_laptop',name:'Laptop',total:140,done:0,completed:false},
+      {id:'sub_desktop',name:'Desktop',total:28,done:0,completed:false},
+      {id:'sub_toutun',name:'Tout en un',total:24,done:0,completed:false},
+      {id:'sub_opt_ord',name:'Options',total:35,done:0,completed:false}
+    ]},
+    {id:'cat_imp',name:'Impression',icon:'\u{1F5A8}\uFE0F',subcats:[
+      {id:'sub_imprimante',name:'Imprimante',total:92,done:0,completed:false},
+      {id:'sub_scanner',name:'Scanner',total:35,done:0,completed:false},
+      {id:'sub_tpv',name:'Terminal pt de vente',total:19,done:0,completed:false},
+      {id:'sub_traceur',name:'Traceur',total:19,done:0,completed:false},
+      {id:'sub_copieur',name:'Copieur',total:16,done:0,completed:false},
+      {id:'sub_fax',name:'Fax',total:1,done:0,completed:false},
+      {id:'sub_consomm',name:'Consommable',total:693,done:0,completed:false},
+      {id:'sub_opt_imp',name:'Options',total:36,done:0,completed:false}
+    ]},
+    {id:'cat_tab',name:'Tablette & Telephonie',icon:'\u{1F4F1}',subcats:[
+      {id:'sub_tablette',name:'Tablette',total:26,done:0,completed:false},
+      {id:'sub_smartphone',name:'Smartphone',total:54,done:0,completed:false},
+      {id:'sub_iot',name:'Objet connecte',total:19,done:0,completed:false},
+      {id:'sub_casque',name:'Casque & ecouteurs',total:15,done:0,completed:false},
+      {id:'sub_opt_tab',name:'Options',total:22,done:0,completed:false}
+    ]},
+    {id:'cat_media',name:'Multimedia',icon:'\u{1F5A5}\uFE0F',subcats:[
+      {id:'sub_ecranpc',name:'Ecran PC',total:70,done:0,completed:false},
+      {id:'sub_tv',name:'Televiseur',total:26,done:0,completed:false},
+      {id:'sub_console',name:'Console de jeu',total:1,done:0,completed:false},
+      {id:'sub_vp',name:'Videoprojecteur',total:24,done:0,completed:false},
+      {id:'sub_ep',name:'Ecran projection',total:9,done:0,completed:false},
+      {id:'sub_visio',name:'Visioconference',total:52,done:0,completed:false},
+      {id:'sub_ei',name:'Ecran interactif',total:12,done:0,completed:false},
+      {id:'sub_photo',name:'Photo & video',total:6,done:0,completed:false},
+      {id:'sub_opt_med',name:'Options',total:56,done:0,completed:false}
+    ]},
+    {id:'cat_acc',name:'Accessoire',icon:'\u{1F50C}',subcats:[
+      {id:'sub_cable',name:'Cable',total:0,done:0,completed:false},
+      {id:'sub_lecteur',name:'Lecteur',total:0,done:0,completed:false},
+      {id:'sub_hdd',name:'Disque dur',total:0,done:0,completed:false},
+      {id:'sub_flash',name:'Memoire flash',total:0,done:0,completed:false},
+      {id:'sub_bag',name:'Bagagerie',total:0,done:0,completed:false},
+      {id:'sub_clavier',name:'Clavier & souris',total:0,done:0,completed:false},
+      {id:'sub_barrette',name:'Barrette memoire',total:0,done:0,completed:false},
+      {id:'sub_gaming',name:'Gaming',total:0,done:0,completed:false},
+      {id:'sub_audio',name:'Audio',total:0,done:0,completed:false},
+      {id:'sub_webcam',name:'Webcam',total:0,done:0,completed:false},
+      {id:'sub_powerbank',name:'Power bank',total:0,done:0,completed:false},
+      {id:'sub_multiprise',name:'Multi-prise',total:0,done:0,completed:false},
+      {id:'sub_onduleur',name:'Onduleur',total:0,done:0,completed:false},
+      {id:'sub_divers',name:'Autres & divers',total:0,done:0,completed:false}
+    ]}
+  ];
+}
+
+function doLogin(){
+  const pw=document.getElementById('pw-input').value.trim();
+  let found=null;
+  for(const[r,p]of Object.entries(PASSWORDS)){if(pw===p){found=r;break;}}
+  if(!found){document.getElementById('login-error').style.display='block';document.getElementById('pw-input').style.borderColor='var(--red)';return;}
+  role=found;
+  document.getElementById('login-screen').style.display='none';
+  if(!localStorage.getItem(BKEY+'_'+role))showBriefing();else bootApp();
+}
+function doLogout(){role=null;document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('pw-input').value='';document.getElementById('login-error').style.display='none';document.getElementById('pw-input').style.borderColor='';}
+document.getElementById('pw-input').addEventListener('focus',()=>{document.getElementById('login-error').style.display='none';document.getElementById('pw-input').style.borderColor='';});
+
+const BRIEFS={
+  admin:{icon:'\u{1F468}\u200D\u2708\uFE0F',title:'Commandant de Mission',sub:'Ryad - Chef de Projet Digital',
+    desc:'Tu es le <strong>Commandant</strong> de l\'Operation Reconquete. Tu cartographies les planetes (categories), fixes les objectifs hebdomadaires et surveilles la progression depuis le QG.<br><br>Tu as acces au <strong>panneau Admin</strong> pour configurer la structure, et au tableau de bord complet pour piloter chaque zone en temps reel.'},
+  editor:{icon:'\u{1F9D1}\u200D\u{1F680}',title:'Ingenieur de Reconquete',sub:'Abdelali - Developpeur Front',
+    desc:'Tu es l\'<strong>Ingenieur de Reconquete</strong> sur le terrain. Chaque semaine, tu restaures des pages produits et tu rapportes ta progression au QG.<br><br>Objectif : <strong>80 pages par semaine</strong>. Zone par zone, planete par planete. Quand tu acheves une zone, tu la marques liberee. La galaxie compte sur toi.'},
+  viewer:{icon:'\u{1FA96}',title:'General de Mission',sub:'Mehdi - Directeur',
+    desc:'Tu es le <strong>General</strong> supervisant l\'operation depuis le QG strategique. Tu acces au tableau de bord global pour suivre l\'avancement de la reconquete en temps reel, la carte galactique complete, et le journal de mission.'}
+};
+
+function showBriefing(){
+  const b=BRIEFS[role];
+  document.getElementById('b-icon').textContent=b.icon;
+  document.getElementById('b-title').textContent=b.title;
+  document.getElementById('b-sub').textContent=b.sub;
+  document.getElementById('b-desc').innerHTML=b.desc;
+  document.getElementById('briefing-screen').style.display='flex';
+}
+function dismissBriefing(){localStorage.setItem(BKEY+'_'+role,'1');document.getElementById('briefing-screen').style.display='none';bootApp();}
+
+async function bootApp(){
+  showLoad();await loadFromSheet();hideLoad();
+  document.getElementById('app').style.display='block';
+  const labels={admin:'\u{1F468}\u200D\u2708\uFE0F Commandant Ryad',editor:'\u{1F9D1}\u200D\u{1F680} Abdelali',viewer:'\u{1FA96} General Mehdi'};
+  document.getElementById('user-label').textContent=labels[role];
+  document.getElementById('admin-panel').style.display=role==='admin'?'block':'none';
+  document.getElementById('editor-panel').style.display=role==='editor'?'block':'none';
+  if(document.getElementById('target-input'))document.getElementById('target-input').value=state.weeklyTarget;
+  renderAll();
+  requestAnimationFrame(animateGalaxy);
+}
+
+async function callSheet(params){
+  const url=SCRIPT_URL+'?'+new URLSearchParams(params);
+  try{const r=await fetch(url);return await r.json();}
+  catch(e){toast('\u26A0\uFE0F','Erreur reseau. Donnees locales.','err');return null;}
+}
+async function loadFromSheet(){
+  const d=await callSheet({action:'getAll'});
+  if(d&&!d.error){
+    state.categories=d.categories||[];
+    state.weeklyTarget=d.weeklyTarget||80;
+    state.weekHistory=d.weekHistory||[];
+    if(state.categories.length===0){state.categories=defaultCategories();await callSheet({action:'saveCategories',data:JSON.stringify(state.categories)});}
+  }else{state.categories=defaultCategories();}
+}
+async function pushToSheet(){await callSheet({action:'saveProgress',data:JSON.stringify({categories:state.categories,weeklyTarget:state.weeklyTarget})});}
+async function pushHistory(entry){await callSheet({action:'saveHistory',data:JSON.stringify(entry)});}
+
+function weekNum(){return Math.max(1,Math.floor((new Date()-START_DATE)/(7*24*3600*1000))+1);}
+function weekDates(n){
+  const s=new Date(START_DATE);s.setDate(s.getDate()+(n-1)*7);
+  const e=new Date(s);e.setDate(e.getDate()+5);
+  const f=d=>d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+  return f(s)+' - '+f(e)+' 2026';
+}
+function getTotals(){
+  let total=0,done=0;
+  for(const c of state.categories)for(const s of c.subcats){total+=s.total||0;done+=s.done||0;}
+  return{total,done,rem:total-done,pct:total?Math.round(done/total*100):0};
+}
+function checkLaunch(){
+  const tc=state.categories.filter(c=>LAUNCH_TRIGGER.includes(c.name));
+  if(tc.length<LAUNCH_TRIGGER.length)return false;
+  return tc.every(c=>{const t=c.subcats.reduce((a,s)=>a+(s.total||0),0);const d=c.subcats.reduce((a,s)=>a+(s.done||0),0);return t>0&&d>=t;});
+}
+
+function renderAll(){
+  renderLaunch();renderWeek();renderKPIs();renderGBar();renderPlanets();renderHistory();
+  if(role==='admin')renderAdminList();
+  if(role==='editor')renderEditor();
+  drawGalaxy();
+}
+
+function renderLaunch(){
+  const ok=checkLaunch();
+  const sig=document.getElementById('launch-signal');
+  sig.className='launch-signal '+(ok?'ready':'pending');
+  document.getElementById('ls-title').textContent=ok?'Signal de lancement PRET - Le site peut etre deploye !':'Signal de lancement en attente';
+  document.getElementById('ls-sub').textContent=ok?'Ordinateur + Impression sont 100% termines. Vous pouvez proceder au deploiement.':'Le site peut etre deploye des que Ordinateur + Impression sont a 100%';
+  document.getElementById('ls-badge').textContent=ok?'GO DEPLOY':'En preparation';
+}
+
+function renderWeek(){
+  const w=weekNum();
+  document.getElementById('wb-week').textContent='Semaine '+w;
+  document.getElementById('wb-dates').textContent=weekDates(w);
+  const e=state.weekHistory.find(h=>h.week===w);
+  const done=e?e.done:0;const tgt=state.weeklyTarget;
+  document.getElementById('wb-done').textContent=done;
+  document.getElementById('wb-target').textContent=tgt;
+  const pct=Math.round(done/tgt*100);
+  document.getElementById('wb-bar').style.width=Math.min(100,pct)+'%';
+  document.getElementById('wb-status').textContent=done===0?'En attente de la premiere saisie':done>=tgt?'Objectif atteint ! ('+pct+'%)':pct+'% de l\'objectif - encore '+(tgt-done)+' pages';
+}
+
+function renderKPIs(){
+  const{total,done,rem,pct}=getTotals();
+  const weeks=state.weeklyTarget>0?Math.ceil(rem/state.weeklyTarget):'-';
+  h('kpi-total',total+' <span class="unit">pages</span>');
+  h('kpi-done',done+' <span class="unit">pages</span>');
+  t('kpi-pct',pct+'%');
+  h('kpi-weeks',weeks+' <span class="unit">sem.</span>');
+  h('kpi-rem',rem+' <span class="unit">pages</span>');
+  t('kpi-rhythm',state.weeklyTarget);
+  t('g-pct-txt',pct+'% restaure');
+}
+
+function renderGBar(){
+  const{done,pct}=getTotals();
+  const bar=document.getElementById('gbar');
+  if(bar)bar.style.width=pct+'%';
+  h('gbar-lbl',pct>6?pct+'%':'');
+  t('g-done-lbl',done+' pages restaurees');
+}
+
+function renderPlanets(){
+  const grid=document.getElementById('planets-grid');
+  if(!grid)return;
+  if(state.categories.length===0){grid.innerHTML='<div style="text-align:center;padding:48px;color:var(--text-muted);grid-column:1/-1;"><div style="font-size:38px;margin-bottom:12px;">&#128760;</div><div>Aucune planete cartographiee</div></div>';return;}
+  grid.innerHTML='';
+  for(const cat of state.categories){
+    const catTotal=cat.subcats.reduce((a,s)=>a+(s.total||0),0);
+    const catDone=cat.subcats.reduce((a,s)=>a+(s.done||0),0);
+    const catPct=catTotal?Math.round(catDone/catTotal*100):0;
+    const lib=cat.subcats.length>0&&cat.subcats.every(s=>s.completed);
+    const inp=catDone>0&&!lib;
+    const isLaunch=LAUNCH_TRIGGER.includes(cat.name);
+    const weeksLeft=state.weeklyTarget>0&&catTotal>catDone?Math.ceil((catTotal-catDone)/state.weeklyTarget):0;
+    const badge=lib?'<span class="pstatus-badge badge-done">Liberee</span>':inp?'<span class="pstatus-badge badge-active">En cours</span>':'<span class="pstatus-badge badge-locked">Corrompue</span>';
+    let zonesHtml='';
+    for(const sub of cat.subcats){
+      const sp=sub.total?Math.round(sub.done/sub.total*100):0;
+      const zc=sub.completed?'done':sub.done>0?'partial':'';
+      zonesHtml+='<div class="zone-row"><div class="zind '+zc+'">'+(sub.completed?'&#10003;':sub.done>0?'~':'')+'</div><div class="zname '+(sub.completed?'done':'')+'">'+sub.name+(sub.total===0?' <span style="font-size:10px;color:var(--yellow);">(a completer)</span>':'')+'</div><div class="zmbar"><div class="zmfill '+(sub.completed?'done':'')+'" style="width:'+sp+'%"></div></div><div class="zcnt"><span class="'+(sub.done>0?'zd':'')+'">'+sub.done+'</span><span style="color:var(--text-dim);">/'+(sub.total||'?')+'</span></div></div>';
+    }
+    const card=document.createElement('div');
+    card.className='pcard'+(lib?' liberated':inp?' active-planet':'')+' '+(isLaunch?'launch-planet':'');
+    card.innerHTML=(isLaunch?'<div class="planet-launch-tag">&#9889; Signal lancement</div>':'')+
+      '<div class="pcard-head"><div class="porb '+(lib?'done':inp?'active':'locked')+'">'+cat.icon+'</div>'+
+      '<div class="pinfo"><div class="pname">'+cat.name+'</div><div class="psub">'+cat.subcats.length+' zones - '+catTotal+' pages</div>'+
+      '<div class="pestim">'+(catDone>=catTotal&&catTotal>0?'<span style="color:var(--green);font-weight:600;">Terminee</span>':catTotal>0?'<strong>~'+weeksLeft+' sem. restantes</strong>':'<span style="color:var(--yellow);">Chiffres a completer dans Sheets</span>')+'</div></div>'+badge+'</div>'+
+      '<div class="pprog"><div class="pbar-wrap"><div class="pbar-fill '+(catPct===100?'done':'')+'" style="width:'+catPct+'%"></div></div>'+
+      '<div class="pbar-lbls"><span>'+catDone+' / '+catTotal+' pages restaurees</span><span class="pbar-pct '+(catPct===100?'done':'')+'">'+catPct+'%</span></div></div>'+
+      '<div class="zones-list">'+(cat.subcats.length>0?zonesHtml:'<div style="padding:12px;font-size:12px;color:var(--text-dim);">Aucune zone.</div>')+'</div>';
+    grid.appendChild(card);
+  }
+}
+
+// GALAXY
+function drawGalaxy(){
+  const canvas=document.getElementById('galaxy-canvas');
+  if(!canvas||!canvas.getContext)return;
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth||800;const H=200;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const cats=state.categories;if(cats.length===0)return;
+  const cx=W/2,cy=H/2;
+  const maxR=Math.min(W*0.38,H*0.6);
+  const positions=cats.map((_,i)=>{
+    const a=cats.length===1?-Math.PI/2:(i/(cats.length-1))*Math.PI*0.9+(Math.PI*0.05);
+    const r=cats.length===1?0:maxR;
+    return{x:cx+Math.cos(a)*r,y:cy-Math.sin(a)*r*0.55+8};
+  });
+  // Connection lines
+  ctx.strokeStyle='rgba(0,91,187,0.1)';ctx.lineWidth=1;ctx.setLineDash([3,5]);
+  for(let i=0;i<positions.length-1;i++){ctx.beginPath();ctx.moveTo(positions[i].x,positions[i].y);ctx.lineTo(positions[i+1].x,positions[i+1].y);ctx.stroke();}
+  ctx.setLineDash([]);
+  // Active planet
+  let active=cats.findIndex(c=>{const t=c.subcats.reduce((a,s)=>a+(s.total||0),0);const d=c.subcats.reduce((a,s)=>a+(s.done||0),0);return d<t||t===0;});
+  if(active===-1)active=cats.length-1;
+  cats.forEach((cat,i)=>{
+    const{x,y}=positions[i];
+    const catTotal=cat.subcats.reduce((a,s)=>a+(s.total||0),0);
+    const catDone=cat.subcats.reduce((a,s)=>a+(s.done||0),0);
+    const pct=catTotal?catDone/catTotal:0;
+    const isLaunch=LAUNCH_TRIGGER.includes(cat.name);
+    const r=13+pct*7;
+    // Orbit
+    ctx.beginPath();ctx.arc(x,y,r+9,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,91,187,0.06)';ctx.lineWidth=1;ctx.stroke();
+    // Planet
+    const grad=ctx.createRadialGradient(x-r*.3,y-r*.3,r*.1,x,y,r);
+    if(pct===1){grad.addColorStop(0,'#34d399');grad.addColorStop(1,'#059669');}
+    else if(pct>0){grad.addColorStop(0,'#60a5fa');grad.addColorStop(1,'#005BBB');}
+    else{grad.addColorStop(0,'#e2e8f0');grad.addColorStop(1,'#94a3b8');}
+    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=grad;ctx.fill();
+    // Launch ring
+    if(isLaunch){ctx.beginPath();ctx.arc(x,y,r+5,0,Math.PI*2);ctx.strokeStyle='rgba(16,185,129,0.45)';ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);}
+    // Progress arc
+    if(pct>0&&pct<1){ctx.beginPath();ctx.arc(x,y,r+4,-Math.PI/2,-Math.PI/2+pct*Math.PI*2);ctx.strokeStyle='rgba(0,91,187,0.55)';ctx.lineWidth=2;ctx.stroke();}
+    // Active glow
+    if(i===active&&pct<1){ctx.beginPath();ctx.arc(x,y,r+11,0,Math.PI*2);ctx.strokeStyle='rgba(0,91,187,0.15)';ctx.lineWidth=2;ctx.stroke();}
+    // Emoji
+    ctx.font=Math.round(r*0.9)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(cat.icon||'&#127760;',x,y);
+    // Name
+    ctx.font='500 10px Inter,sans-serif';
+    ctx.fillStyle=pct===1?'#059669':pct>0?'#005BBB':'#64748b';
+    ctx.textAlign='center';ctx.textBaseline='top';
+    ctx.fillText(cat.name.length>12?cat.name.substring(0,12)+'...':cat.name,x,y+r+7);
+    // Pct badge
+    if(pct>0){
+      const bw=24,bh=12;
+      ctx.fillStyle=pct===1?'#059669':'#005BBB';
+      ctx.beginPath();ctx.roundRect(x-bw/2,y-r-16,bw,bh,5);ctx.fill();
+      ctx.font='700 8px Inter,sans-serif';ctx.fillStyle='white';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(Math.round(pct*100)+'%',x,y-r-10);
+    }
+  });
+  // Ship
+  if(active>=0&&active<positions.length){
+    const{x,y}=positions[active];
+    const catTotal=cats[active].subcats.reduce((a,s)=>a+(s.total||0),0);
+    const catDone=cats[active].subcats.reduce((a,s)=>a+(s.done||0),0);
+    const r=13+(catTotal?catDone/catTotal:0)*7;
+    const sx=x+Math.cos(shipAngle)*(r+15);
+    const sy=y+Math.sin(shipAngle)*(r+15)*0.5;
+    ctx.font='16px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('\u{1F6F8}',sx,sy);
+  }
+}
+
+function animateGalaxy(){shipAngle+=0.012;drawGalaxy();requestAnimationFrame(animateGalaxy);}
+
+function renderEditor(){
+  const c=document.getElementById('editor-content');if(!c)return;
+  if(state.categories.length===0){c.innerHTML='<p style="color:var(--text-muted);font-size:12px;">Aucune planete configuree.</p>';return;}
+  c.innerHTML='';
+  for(const cat of state.categories){
+    const block=document.createElement('div');block.className='eblock';
+    let rows='';
+    for(const sub of cat.subcats){
+      rows+='<div class="erow"><div><div class="ename">'+sub.name+'</div><div class="emeta">Total : '+sub.done+'/'+(sub.total||'?')+' pages</div></div>'+
+        '<input type="number" class="einput" id="entry_'+sub.id+'" placeholder="0" min="0" max="'+((sub.total||999)-sub.done)+'" value="">'+
+        '<button class="etoggle '+(sub.completed?'active':'')+'" id="tog_'+sub.id+'" onclick="toggleDone(\''+sub.id+'\',\''+sub.name.replace(/'/g,"\\'")+'\')" title="Marquer liberee">&#10003;</button></div>';
+    }
+    block.innerHTML='<div class="ehead"><span>'+cat.icon+'</span> Planete '+cat.name+'</div>'+rows;
+    c.appendChild(block);
+  }
+}
+
+function toggleDone(subId,name){
+  const sub=findSub(subId);if(!sub)return;
+  if(!sub.completed){
+    pendingConfirm={type:'mark_done',subId};
+    document.getElementById('ct').textContent='Zone liberee ?';
+    document.getElementById('cm').innerHTML='Tu confirmes avoir entierement acheve la zone <strong>"'+name+'"</strong> ?<br>Les <strong>'+sub.total+' pages</strong> seront marquees comme restaurees.';
+    document.getElementById('confirm-modal').classList.add('show');
+  }else{sub.completed=false;pushToSheet();renderAll();toast('\u{1F504}','Zone "'+name+'" remise en cours.');}
+}
+
+async function saveEditorData(){
+  let wt=0;
+  for(const cat of state.categories){for(const sub of cat.subcats){const inp=document.getElementById('entry_'+sub.id);if(!inp)continue;const val=parseInt(inp.value)||0;if(val>0){sub.done=Math.min(sub.total||999,sub.done+val);wt+=val;}}}
+  if(wt===0){toast('\u26A0\uFE0F','Aucune page saisie.','err');return;}
+  showLoad();
+  const wn=weekNum();const{done}=getTotals();
+  const ex=state.weekHistory.find(h=>h.week===wn);
+  if(ex){ex.done+=wt;ex.cumul=done;await pushHistory(ex);}
+  else{const e={week:wn,dates:weekDates(wn),done:wt,target:state.weeklyTarget,cumul:done};state.weekHistory.push(e);await pushHistory(e);}
+  await pushToSheet();hideLoad();
+  toast('\u{1F680}',wt+' pages restaurees ! Rapport envoye au QG.');renderAll();
+}
+
+function switchTab(e,id){document.querySelectorAll('.atab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.atab-content').forEach(t=>t.classList.remove('active'));e.target.classList.add('active');document.getElementById(id).classList.add('active');}
+function showAddCat(){const f=document.getElementById('add-cat-form');f.style.display=f.style.display==='none'?'block':'none';}
+async function addCat(){
+  const name=document.getElementById('nc-name').value.trim();
+  const icon=document.getElementById('nc-icon').value.trim()||'\u{1FA90}';
+  if(!name){toast('\u26A0\uFE0F','Nom requis.','err');return;}
+  state.categories.push({id:'cat_'+Date.now(),name,icon,subcats:[]});
+  document.getElementById('nc-name').value='';document.getElementById('nc-icon').value='';
+  document.getElementById('add-cat-form').style.display='none';
+  showLoad();await pushToSheet();hideLoad();renderAdminList();renderPlanets();drawGalaxy();
+  toast('\u{1FA90}','Planete "'+name+'" ajoutee !');
+}
+function renderAdminList(){
+  const list=document.getElementById('admin-cat-list');if(!list)return;
+  if(state.categories.length===0){list.innerHTML='<p style="color:var(--text-muted);font-size:12px;text-align:center;padding:14px;">Aucune planete.</p>';return;}
+  list.innerHTML='';
+  for(const cat of state.categories){
+    const total=cat.subcats.reduce((a,s)=>a+(s.total||0),0);
+    const item=document.createElement('div');item.className='acat-item';
+    let sh='';for(const sub of cat.subcats)sh+='<div class="asub-row"><span class="asub-name">'+sub.name+'</span><span class="asub-cnt">'+(sub.total||'?')+' pages</span><button class="btn btn-ghost btn-sm" onclick="delSub(\''+cat.id+'\',\''+sub.id+'\',\''+sub.name.replace(/'/g,"\\'")+'\')">&times;</button></div>';
+    item.innerHTML='<div class="acat-head" onclick="toggleACat(\'abody_'+cat.id+'\')">'+'<span style="font-size:18px">'+cat.icon+'</span><span class="acat-name">'+cat.name+'</span><span class="acat-stats">'+cat.subcats.length+' zones - '+total+' pages</span>'+'<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();delCat(\''+cat.id+'\',\''+cat.name.replace(/'/g,"\\'")+'\')">\u{1F5D1}</button><span>&#9660;</span></div>'+'<div class="acat-body" id="abody_'+cat.id+'">'+sh+'<div class="add-sub-row"><input type="text" class="form-input" id="sn_'+cat.id+'" placeholder="Nom de la zone" style="flex:1;"><input type="number" class="form-input" id="sp_'+cat.id+'" placeholder="Pages" style="width:90px;min-width:80px;"><button class="btn btn-g btn-sm" onclick="addSub(\''+cat.id+'\')">+ Zone</button></div></div>';
+    list.appendChild(item);
+  }
+}
+function toggleACat(id){const el=document.getElementById(id);if(el)el.classList.toggle('open');}
+async function addSub(catId){
+  const n=document.getElementById('sn_'+catId).value.trim();
+  const p=parseInt(document.getElementById('sp_'+catId).value)||0;
+  if(!n||p<=0){toast('\u26A0\uFE0F','Nom et pages requis.','err');return;}
+  const cat=state.categories.find(c=>c.id===catId);if(!cat)return;
+  cat.subcats.push({id:'sub_'+Date.now(),name:n,total:p,done:0,completed:false});
+  document.getElementById('sn_'+catId).value='';document.getElementById('sp_'+catId).value='';
+  showLoad();await pushToSheet();hideLoad();renderAdminList();renderPlanets();drawGalaxy();
+  toast('\u2705','Zone "'+n+'" ('+p+' pages) ajoutee !');
+}
+function delSub(catId,subId,name){pendingConfirm={type:'del_sub',catId,subId};document.getElementById('ct').textContent='Supprimer la zone ?';document.getElementById('cm').innerHTML='Supprimer <strong>"'+name+'"</strong> ?';document.getElementById('confirm-modal').classList.add('show');}
+function delCat(catId,name){pendingConfirm={type:'del_cat',catId};document.getElementById('ct').textContent='Supprimer la planete ?';document.getElementById('cm').innerHTML='Supprimer la planete <strong>"'+name+'"</strong> et toutes ses zones ?';document.getElementById('confirm-modal').classList.add('show');}
+async function saveTarget(){const val=parseInt(document.getElementById('target-input').value)||80;state.weeklyTarget=val;showLoad();await pushToSheet();hideLoad();renderWeek();renderKPIs();toast('\u2699\uFE0F','Objectif : '+val+' pages/semaine.');}
+
+function renderHistory(){
+  const sec=document.getElementById('history-section');const tbody=document.getElementById('history-tbody');if(!tbody)return;
+  if(state.weekHistory.length===0){sec.style.display='none';return;}
+  sec.style.display='block';tbody.innerHTML='';
+  for(const h of state.weekHistory){const ok=h.done>=h.target;const tr=document.createElement('tr');tr.innerHTML='<td>Sem. '+h.week+'</td><td>'+h.dates+'</td><td class="td-b">'+h.done+'</td><td style="color:var(--yellow);">'+h.target+'</td><td class="'+(ok?'td-g':'td-r')+'">'+(ok?'Objectif atteint':'En dessous')+'</td><td class="td-b">'+h.cumul+'</td>';tbody.appendChild(tr);}
+}
+
+function closeConfirm(){document.getElementById('confirm-modal').classList.remove('show');pendingConfirm=null;}
+async function confirmAction(){
+  if(!pendingConfirm)return;
+  if(pendingConfirm.type==='mark_done'){const sub=findSub(pendingConfirm.subId);if(sub){sub.done=sub.total;sub.completed=true;}showLoad();await pushToSheet();hideLoad();toast('\u{1F389}','Zone liberee !');}
+  else if(pendingConfirm.type==='del_sub'){const cat=state.categories.find(c=>c.id===pendingConfirm.catId);if(cat)cat.subcats=cat.subcats.filter(s=>s.id!==pendingConfirm.subId);showLoad();await pushToSheet();hideLoad();renderAdminList();}
+  else if(pendingConfirm.type==='del_cat'){state.categories=state.categories.filter(c=>c.id!==pendingConfirm.catId);showLoad();await pushToSheet();hideLoad();renderAdminList();}
+  closeConfirm();renderAll();
+}
+
+function findSub(id){for(const c of state.categories){const s=c.subcats.find(s=>s.id===id);if(s)return s;}return null;}
+function showLoad(){document.getElementById('loading-overlay').style.display='flex';}
+function hideLoad(){document.getElementById('loading-overlay').style.display='none';}
+function h(id,v){const el=document.getElementById(id);if(el)el.innerHTML=v;}
+function t(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
+function toast(icon,msg,type=''){const c=document.getElementById('tz');const d=document.createElement('div');d.className='toast '+type;d.innerHTML='<span>'+icon+'</span><span>'+msg+'</span>';c.appendChild(d);setTimeout(()=>d.remove(),3500);}
+window.addEventListener('resize',()=>{if(role)drawGalaxy();});
+</script>
+</body>
+</html>
